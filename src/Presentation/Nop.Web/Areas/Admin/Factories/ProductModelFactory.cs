@@ -1457,6 +1457,43 @@ namespace Nop.Web.Areas.Admin.Factories
         }
 
         /// <summary>
+        /// Prepare paged product specification attribute model
+        /// </summary>
+        /// <param name="attribute">Product specification attribute model</param>
+        /// <returns>Product specification attribute model</returns>
+        public virtual ProductSpecificationAttributeModel PrepareProductSpecificationAttributeModel(
+            ProductSpecificationAttribute attribute)
+        {
+            var model = attribute.ToModel<ProductSpecificationAttributeModel>();
+            //fill in additional values (not existing in the entity)
+            model.AttributeTypeName = _localizationService.GetLocalizedEnum(attribute.AttributeType);
+            model.AttributeId = attribute.SpecificationAttributeOption.SpecificationAttribute.Id;
+            model.AttributeTypeId = (int)attribute.AttributeType;
+            model.AttributeName = attribute.SpecificationAttributeOption.SpecificationAttribute.Name;
+
+            switch (attribute.AttributeType)
+            {
+                case SpecificationAttributeType.Option:
+                    model.ValueRaw = WebUtility.HtmlEncode(attribute.SpecificationAttributeOption.Name);
+                    model.SpecificationAttributeOptionId = attribute.SpecificationAttributeOptionId;
+                    break;
+                case SpecificationAttributeType.CustomText:
+                    model.ValueRaw = WebUtility.HtmlEncode(attribute.CustomValue);
+                    break;
+                case SpecificationAttributeType.CustomHtmlText:
+                    model.ValueRaw = attribute.CustomValue;
+                    break;
+                case SpecificationAttributeType.Hyperlink:
+                    model.ValueRaw = attribute.CustomValue;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(attribute.AttributeType));
+            }
+
+            return model;
+        }
+
+        /// <summary>
         /// Prepare product tag search model
         /// </summary>
         /// <param name="searchModel">Product tag search model</param>

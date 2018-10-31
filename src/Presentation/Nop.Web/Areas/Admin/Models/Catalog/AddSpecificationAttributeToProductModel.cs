@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Nop.Core.Domain.Catalog;
 using Nop.Web.Framework.Models;
 using Nop.Web.Framework.Mvc.ModelBinding;
 
@@ -26,7 +27,7 @@ namespace Nop.Web.Areas.Admin.Models.Catalog
         public int SpecificationAttributeId { get; set; }
 
         [NopResourceDisplayName("Admin.Catalog.Products.SpecificationAttributes.Fields.AttributeType")]
-        public int AttributeTypeId { get; set; }
+        public int AttributeTypeId { get; set; } = (int) SpecificationAttributeType.CustomText;
 
         [NopResourceDisplayName("Admin.Catalog.Products.SpecificationAttributes.Fields.SpecificationAttributeOption")]
         public int SpecificationAttributeOptionId { get; set; }

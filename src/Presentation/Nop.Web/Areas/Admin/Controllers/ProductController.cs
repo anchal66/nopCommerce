@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Primitives;
 using Nop.Core;
 using Nop.Core.Domain.Catalog;
@@ -1775,8 +1776,8 @@ namespace Nop.Web.Areas.Admin.Controllers
             return Json(model);
         }
 
-        [HttpPost]
-        public virtual IActionResult ProductSpecAttrUpdate(ProductSpecificationAttributeModel model)
+        [HttpPost, ParameterBasedOnFormName("save-continue", "continueEditing")]
+        public virtual IActionResult ProductSpecAttrUpdate(ProductSpecificationAttributeModel model, bool continueEditing)
         {
             if (!_permissionService.Authorize(StandardPermissionProvider.ManageProducts))
                 return AccessDeniedView();
@@ -1805,9 +1806,34 @@ namespace Nop.Web.Areas.Admin.Controllers
 
             psa.ShowOnProductPage = model.ShowOnProductPage;
             psa.DisplayOrder = model.DisplayOrder;
+            psa.CustomValue = model.ValueRaw;
             _specificationAttributeService.UpdateProductSpecificationAttribute(psa);
 
-            return new NullJsonResult();
+            return continueEditing 
+                ? RedirectToAction("EditProductSpecAttribute", new {id = model.Id}) 
+                : RedirectToAction("Edit", new {id = productId});
+        }
+
+        public virtual IActionResult EditProductSpecAttribute(int id)
+        {
+            if (!_permissionService.Authorize(StandardPermissionProvider.ManageProducts))
+                return AccessDeniedView();
+
+            //try to get a product specification attribute with the specified id
+            var attribute = _specificationAttributeService.GetProductSpecificationAttributeById(id);
+            if (attribute == null)
+                return RedirectToAction("List");
+            var model = _productModelFactory.PrepareProductSpecificationAttributeModel(attribute);
+
+            //include additional data, which is not directly related to the model 
+            ViewBag.ProductId = attribute.ProductId;
+            ViewBag.Options = model.AttributeTypeId == (int) SpecificationAttributeType.Option
+                ? _specificationAttributeService
+                    .GetSpecificationAttributeOptionsBySpecificationAttribute(model.AttributeId)
+                    .Select(option => new SelectListItem {Text = option.Name, Value = option.Id.ToString()}).ToList()
+                : new List<SelectListItem>();
+
+            return View(model);
         }
 
         [HttpPost]
@@ -1831,7 +1857,6 @@ namespace Nop.Web.Areas.Admin.Controllers
             }
 
             _specificationAttributeService.DeleteProductSpecificationAttribute(psa);
-
             return new NullJsonResult();
         }
 

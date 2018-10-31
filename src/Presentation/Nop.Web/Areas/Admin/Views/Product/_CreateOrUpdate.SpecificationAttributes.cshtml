@@ -35,12 +35,6 @@
                                                 return data;
                                             }
                                         },
-                                        update: {
-                                            url: "@Html.Raw(Url.Action("ProductSpecAttrUpdate", "Product"))",
-                                            type: "POST",
-                                            dataType: "json",
-                                            data: addAntiForgeryToken
-                                        },
                                         destroy: {
                                             url: "@Html.Raw(Url.Action("ProductSpecAttrDelete", "Product"))",
                                             type: "POST",
@@ -105,27 +99,18 @@
                                         title: "@T("Admin.Catalog.Products.SpecificationAttributes.Fields.Value")",
                                         width: 200,
                                         encoded: false,
-                                        editor: function setDropDownEditor(container, options) {
-                                                    if (options.model.AttributeTypeId == @((int)SpecificationAttributeType.Option)) {
-                                                        var dropDownList = $('<input required data-text-field="Name" data-value-field="Id" data-bind="value:SpecificationAttributeOptionId"/>')
-                                                            .appendTo(container).kendoDropDownList().data("kendoDropDownList");
-                                                        $.ajax({
-                                                            type: "GET",
-                                                            url: "@(Url.Action("GetOptionsByAttributeId", "SpecificationAttribute"))",
-                                                            data: { "attributeId": options.model.AttributeId },
-                                                            success: function (data) {
-                                                                var availableOptions = [];
-                                                                $.each(data, function(id, option) {
-                                                                    availableOptions.push({ Id: option.id, Name: option.name });
-                                                                });
-                                                                dropDownList.setDataSource(availableOptions);
-                                                                dropDownList.select(function(item) {
-                                                                    return item.Id === options.model.SpecificationAttributeOptionId;
-                                                                });
-                                                            }
-                                                        });
-                                                    }
-                                                }
+                                        template: function (item) {
+                                            item.ValueRaw = !!item.ValueRaw ? item.ValueRaw : "";
+
+                                            if (item.AttributeTypeId === @((int) SpecificationAttributeType.CustomHtmlText)) {
+                                                item.ValueRaw = item.ValueRaw
+                                                    .replace(/&lt;/g, '<')
+                                                    .replace(/&gt;/g, '>')
+                                                    .replace(/&amp;/g, '&')
+                                                    .replace(/&quot;/g, '"');
+                                            }
+                                            return item.ValueRaw;
+                                        }
                                     }, {
                                         field: "AllowFiltering",
                                         title: "@T("Admin.Catalog.Products.SpecificationAttributes.Fields.AllowFiltering")",
@@ -148,27 +133,14 @@
                                         //integer format
                                         format: "{0:0}"
                                     }, {
-                                        command: [
-                                            {
-                                                name: "edit",
-                                                text: {
-                                                    edit: "@T("Admin.Common.Edit")",
-                                                    update: "@T("Admin.Common.Update")",
-                                                    cancel: "@T("Admin.Common.Cancel")"
-                                                }
-                                            }, {
-                                                name: "destroy",
-                                                text: "@T("Admin.Common.Delete")"
-                                            }
-                                        ],
-                                        width: 200
+                                        field: "Id",
+                                        title: "@T("Admin.Common.Edit")",
+                                        width: 100,
+                                        headerAttributes: { style: "text-align:center" },
+                                        attributes: { style: "text-align:center" },
+                                        template: '<a class="btn btn-default" href="@Html.Raw(Url.Action("EditProductSpecAttribute", "Product"))/#=Id#"><i class="fa fa-pencil"></i>@T("Admin.Common.Edit")</a>'
                                     }
-                                ],
-                                edit: function(e) {
-                                    if (e.model.AttributeTypeId != @((int)SpecificationAttributeType.Option)) {
-                                        e.container.find("input[name=AllowFiltering]").attr("disabled", true);
-                                    }
-                                }
+                                ]
                             });
                         });
                     </script>

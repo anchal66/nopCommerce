@@ -1,0 +1,146 @@
+﻿@model ProductSpecificationAttributeModel
+
+@using Nop.Core.Domain.Catalog
+<form asp-controller="Product" asp-action="ProductSpecAttrUpdate" id="spec-form" method="post">
+    <div class="content-header clearfix">
+        <h1 class="pull-left">
+            @T("Admin.Catalog.Attributes.SpecificationAttributes.EditAttributeDetails") - @Model.AttributeName
+            <small>
+                <i class="fa fa-arrow-circle-left"></i>
+                <a asp-action="Edit" asp-route-id="@ViewBag.ProductId">@T("Admin.Catalog.Attributes.SpecificationAttributes.BackToList")</a>
+            </small>
+        </h1>
+        <div class="pull-right">
+            <button type="submit" name="save" class="btn bg-blue">
+                <i class="fa fa-floppy-o"></i>
+                @T("Admin.Common.Save")
+            </button>
+            <button type="submit" name="save-continue" class="btn bg-blue">
+                <i class="fa fa-floppy-o"></i>
+                @T("Admin.Common.SaveContinue")
+            </button>
+            <button type="button" id="product-delete" class="btn bg-red">
+                <i class="fa fa-trash-o"></i>
+                @T("Admin.Common.Delete")
+            </button>
+            <script>
+                $(document).ready(function() {
+                    $('#product-delete').on('click', function () {
+                        $.ajax({
+                            cache: false,
+                            type: "POST",
+                            url: "@Html.Raw(Url.Action("ProductSpecAttrDelete", "Product"))",
+                            data: addAntiForgeryToken({
+                                id: "@Model.Id"
+                            }),
+                            success: function (data) {
+                                window.location.replace("@Html.Raw(Url.Action("Edit", "Product", new {id = ViewBag.ProductId }))");
+                            },
+                            error: function (xhr, ajaxOptions, thrownError) {
+                                $('#deletionFailed-info').html(thrownError);
+                                $("#deletionFailed").click();
+                            },
+                        });
+                    });
+                });
+            </script>
+        </div>
+    </div>
+    <div class="content">
+        <div class="form-horizontal">
+            <div class="panel-group">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <nop-label asp-for="AttributeTypeName" />
+                            </div>
+                            <div class="col-md-9">
+                                @Model.AttributeTypeName
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <nop-label asp-for="AttributeName" />
+                            </div>
+                            <div class="col-md-9">
+                                @Model.AttributeName
+                            </div>
+                        </div>
+                        @if (Model.AttributeTypeId == (int)SpecificationAttributeType.Option)
+                        {
+                            <div class="form-group">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="SpecificationAttributeOptionId" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-select asp-for="SpecificationAttributeOptionId" asp-items="ViewBag?.Options" />
+                                    <span asp-validation-for="SpecificationAttributeOptionId"></span>
+                                </div>
+                            </div>
+
+                        }
+                        else if (Model.AttributeTypeId == (int)SpecificationAttributeType.CustomHtmlText)
+                        {
+                            <div class="form-group">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="ValueRaw" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-editor asp-for="ValueRaw" asp-template="RichEditor" />
+                                    <span asp-validation-for="ValueRaw"></span>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="form-group">
+                                <div class="col-md-3">
+                                    <nop-label asp-for="ValueRaw" />
+                                </div>
+                                <div class="col-md-9">
+                                    <nop-editor asp-for="ValueRaw" />
+                                    <span asp-validation-for="ValueRaw"></span>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <nop-label asp-for="AllowFiltering" />
+                            </div>
+                            <div class="col-md-9">
+                                <nop-editor asp-disabled="@(Model.AttributeTypeId != (int)SpecificationAttributeType.Option)"
+                                            asp-for="AllowFiltering" />
+                                <span asp-validation-for="AllowFiltering"></span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <nop-label asp-for="ShowOnProductPage" />
+                            </div>
+                            <div class="col-md-9">
+                                <nop-editor asp-for="ShowOnProductPage" />
+                                <span asp-validation-for="ShowOnProductPage"></span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <nop-label asp-for="DisplayOrder" />
+                            </div>
+                            <div class="col-md-9">
+                                <nop-editor asp-for="DisplayOrder" />
+                                <span asp-validation-for="DisplayOrder"></span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <input asp-for="Id" hidden="hidden" />
+    <input asp-for="AttributeTypeId" hidden="hidden" />
+</form>
+<nop-alert asp-alert-id="deletionFailed" />
